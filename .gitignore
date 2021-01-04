@@ -1,0 +1,6 @@
+node_modules
+src/config/prod.ts
+dist
+yarn.lock
+package-lock.json
+.DS_Store
