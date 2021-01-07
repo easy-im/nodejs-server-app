@@ -50,10 +50,7 @@ router.put('/signIn', async (req, res) => {
     return res.json(Util.fail('用户不存在或密码错误', 0));
   }
   const passwordEncode = Util.encodePassword(password);
-  const [err, userInfo] = await User.getUserInfoByPassword(
-    mobile,
-    passwordEncode
-  );
+  const [err, userInfo] = await User.getUserInfoByPassword(mobile, passwordEncode);
   if (err) {
     log(err);
     return res.json(Util.fail('数据库查询失败', 500));
@@ -79,7 +76,7 @@ router.put('/signIn', async (req, res) => {
     Util.success({
       ...userInfo,
       token,
-    })
+    }),
   );
 });
 

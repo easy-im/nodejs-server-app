@@ -1,11 +1,11 @@
-import socketIO from 'socket.io';
+import { Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import User from '../service/user';
 
-export default (socket: socketIO.Socket, next: any) => {
+export default (socket: Socket, next: any) => {
   // const socketId = socket.id;
-  const { token } = socket.handshake.query;
+  const { token } = socket.handshake.query as any;
   if (!token) {
     return next(new Error('用户未登录'));
   }

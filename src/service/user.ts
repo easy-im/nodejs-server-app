@@ -12,8 +12,7 @@ class User {
    */
   async createUser(info: { mobile: number; password: string }) {
     try {
-      const data = await db.table(this.table)
-        .add(info);
+      const data = await db.table(this.table).add(info);
       return [null, data];
     } catch (err) {
       return [err, null];
@@ -28,7 +27,8 @@ class User {
    */
   async getUserInfoByMobile(mobile: number) {
     try {
-      const data = await db.table(this.table)
+      const data = await db
+        .table(this.table)
         .where({
           mobile,
         })
@@ -47,7 +47,8 @@ class User {
    */
   async getUserInfoById(uid: number) {
     try {
-      const data = await db.table(this.table)
+      const data = await db
+        .table(this.table)
         .where({
           id: uid,
         })
@@ -67,7 +68,8 @@ class User {
    */
   async getUserInfoByPassword(mobile: number, password: string) {
     try {
-      const data = await db.table(this.table)
+      const data = await db
+        .table(this.table)
         .where({
           mobile,
           password,
@@ -87,7 +89,8 @@ class User {
    */
   async getRelationByUid(uid: number) {
     try {
-      const data = await db.table('view_user_friends')
+      const data = await db
+        .table('view_user_friends')
         .where({
           uid,
         })
@@ -108,7 +111,8 @@ class User {
    */
   async updateUserToken(uid: number, payload: { token: string; platform: string }) {
     try {
-      const data = await db.table(this.table)
+      const data = await db
+        .table(this.table)
         .where({
           id: uid,
         })
@@ -131,7 +135,8 @@ class User {
    */
   async updateUserClientId(uid: number, client_id: string) {
     try {
-      const data = await db.table(this.table)
+      const data = await db
+        .table(this.table)
         .where({
           id: uid,
         })
@@ -151,7 +156,8 @@ class User {
    */
   async getUserGroup(uid: number) {
     try {
-      const data = await db.table('view_user_group')
+      const data = await db
+        .table('view_user_group')
         .where({
           uid,
         })

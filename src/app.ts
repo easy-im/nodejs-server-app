@@ -1,9 +1,9 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, Request, Response } from 'express';
 import http from 'http';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
-import socketIO from 'socket.io';
+import { Server } from 'socket.io';
 import debug from 'debug';
 import expressJwt from 'express-jwt';
 import config from './config';
@@ -19,8 +19,9 @@ const isDev = process.env.NODE_ENV === 'development';
 const { jwt } = config;
 
 const app: Application = express();
-const server: http.Server = new http.Server(app);
-const io: socketIO.Server = socketIO(server, {
+const httpServer: http.Server = http.createServer(app);
+
+const io = new Server(httpServer, {
   pingInterval: 5000,
   pingTimeout: 5000,
 });
@@ -48,7 +49,7 @@ app.use(
     },
   }).unless({
     path: jwt.routeWhiteList,
-  })
+  }),
 );
 
 app.use('/', indexRouter);
@@ -62,30 +63,23 @@ app.use((req, res, next) => {
 
 // 500 error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use(
-  (
-    err: { message: string; status: number; name: string },
-    req: Request,
-    res: Response,
-    _: NextFunction
-  ) => {
-    if (err.name === 'UnauthorizedError') {
-      return res.json(Util.fail('invalid token', 401));
-    }
-
-    return res.json(
-      Util.success(
-        {
-          message: err.message,
-          error: isDev ? err : {},
-        },
-        err.status || 500,
-        '内部服务器错误'
-      )
-    );
+app.use((err: { message: string; status: number; name: string }, req: Request, res: Response) => {
+  if (err.name === 'UnauthorizedError') {
+    return res.json(Util.fail('invalid token', 401));
   }
-);
 
-server.listen(8360, () => {
+  return res.json(
+    Util.success(
+      {
+        message: err.message,
+        error: isDev ? err : {},
+      },
+      err.status || 500,
+      '内部服务器错误',
+    ),
+  );
+});
+
+httpServer.listen(8360, () => {
   log('IM 服务在 8360端口启动');
 });

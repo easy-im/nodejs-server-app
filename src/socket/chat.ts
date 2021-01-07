@@ -1,4 +1,4 @@
-import socketIO from 'socket.io';
+import { Server, Namespace, Socket } from 'socket.io';
 import debug from 'debug';
 import jwt from 'jsonwebtoken';
 import User from '../service/user';
@@ -9,7 +9,10 @@ import config from '../config';
 import { MessageRecord, Message as MessageData } from '../interface/entity';
 import { CHAT_MESSAGE, RESPONSE_MESSAGE, SOCKET_RESPONSE } from '../interface/response';
 import {
-  ENUM_MESSAGE_DIST_TYPE, ENUM_MESSAGE_CONTENT_TYPE, ENUM_SOCKET_MESSAGE_TYPE, ENUM_MESSAGE_RESPONSE_STATUS,
+  ENUM_MESSAGE_DIST_TYPE,
+  ENUM_MESSAGE_CONTENT_TYPE,
+  ENUM_SOCKET_MESSAGE_TYPE,
+  ENUM_MESSAGE_RESPONSE_STATUS,
 } from '../enum/message';
 
 const log = debug('ws');
@@ -17,22 +20,22 @@ const log = debug('ws');
 export default class Chat {
   private namespace = 'chat';
 
-  private io: socketIO.Server;
+  private io: Server;
 
-  private nsp: socketIO.Namespace;
+  private nsp: Namespace;
 
-  constructor(io: socketIO.Server) {
+  constructor(io: Server) {
     this.io = io;
     this.nsp = io.of(this.namespace);
   }
 
   setup() {
-    this.nsp.on('connect', async (socket: socketIO.Socket) => {
+    this.nsp.on('connect', async (socket: Socket) => {
       log('用户已连接');
 
       const { handshake } = socket;
       const { query } = handshake;
-      const { token } = query;
+      const { token } = query as any;
       const user: any = jwt.verify(token, config.jwt.secret);
       const { uid } = user;
       await User.updateUserClientId(uid, socket.id);
@@ -46,16 +49,12 @@ export default class Chat {
     });
   }
 
-  private onMessage(socket: socketIO.Socket, uid: number) {
+  private onMessage(socket: Socket, uid: number) {
     socket.on('message', async (payload: { message: MessageRecord }) => {
       const { id } = socket;
       const { message } = payload;
       log('收到消息：', message);
-      const {
-        dist_id,
-        dist_type = ENUM_MESSAGE_DIST_TYPE.PRIVATE,
-        content,
-      } = message;
+      const { dist_id, dist_type = ENUM_MESSAGE_DIST_TYPE.PRIVATE, content } = message;
 
       const response_status_message: RESPONSE_MESSAGE = {
         status: ENUM_MESSAGE_RESPONSE_STATUS.SUCCESS,
@@ -80,7 +79,7 @@ export default class Chat {
     });
   }
 
-  private async handlePrivateMessage(socket: socketIO.Socket, uid: number, payload: { message: MessageRecord }) {
+  private async handlePrivateMessage(socket: Socket, uid: number, payload: { message: MessageRecord }) {
     const { id } = socket;
     const { message } = payload;
     const {
@@ -165,7 +164,7 @@ export default class Chat {
     await Message.updateMessage(result.insertId, { is_sent: 1 });
   }
 
-  private async handleGroupMessage(socket: socketIO.Socket, uid: number, payload: { message: MessageRecord }) {
+  private async handleGroupMessage(socket: Socket, uid: number, payload: { message: MessageRecord }) {
     const { id } = socket;
     const { message } = payload;
     const {
