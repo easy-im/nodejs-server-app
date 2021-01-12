@@ -91,7 +91,7 @@ router.post('/signUp', async (req, res) => {
   let { mobile, password = '' } = req.body;
   password = password.trim();
 
-  if (!mobile || mobile.length !== 11) {
+  if (!mobile || mobile.length !== 11 || !Util.isPhoneNumber(mobile)) {
     return res.json(Util.fail('手机号不正确', 0));
   }
   if (!password) {
@@ -107,9 +107,14 @@ router.post('/signUp', async (req, res) => {
     return res.json(Util.fail('手机号已存在', 0));
   }
   const passwordEncode = Util.encodePassword(password);
+  const [, lastUser] = await User.getLastUser();
   const [err2, info] = await User.createUser({
     mobile,
     password: passwordEncode,
+    nickname: `kitim_${lastUser?.id ? lastUser?.id + 1 : 'user'}`,
+    avatar: `https://im.wangcai.me/speedy_avatar_${Util.getRandomInt(1, 8)}.jpg`,
+    sex: 0,
+    create_time: +new Date(),
   });
   if (err2) {
     log(err2);

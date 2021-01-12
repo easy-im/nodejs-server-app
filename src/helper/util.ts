@@ -30,6 +30,12 @@ export default class Util {
   }
 
   public static encryptPhoneNumber(number: number): string {
-    return (`${number}`).replace(/^(\d{3})(\d{4})(\d{4})/, '$1****$2');
+    return `${number}`.replace(/^(\d{3})(\d{4})(\d{4})/, '$1****$2');
+  }
+
+  public static getRandomInt(min: number, max: number) {
+    const minNumber = Math.ceil(min);
+    const maxNumber = Math.floor(max);
+    return Math.floor(Math.random() * (maxNumber - minNumber)) + minNumber; // 不含最大值，含最小值
   }
 }

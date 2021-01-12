@@ -10,7 +10,7 @@ class User {
    * @param {string} info.password 用户密码
    * @returns 用户信息
    */
-  async createUser(info: { mobile: number; password: string }) {
+  async createUser(info: Record<string, number | string>) {
     try {
       const data = await db.table(this.table).add(info);
       return [null, data];
@@ -163,6 +163,18 @@ class User {
           uid,
         })
         .select();
+      return [null, data];
+    } catch (err) {
+      return [err, null];
+    }
+  }
+
+  /**
+   * 获取用户群组
+   */
+  async getLastUser() {
+    try {
+      const data = await db.table(this.table).order('id desc').find();
       return [null, data];
     } catch (err) {
       return [err, null];
