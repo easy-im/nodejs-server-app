@@ -28,10 +28,16 @@ export interface User {
   status: number;
 }
 
-export interface FriendInfo extends User {
-  uid: number;
-  friend_id: number;
+export interface FriendInfo {
+  fid: number;
   remark: string;
+  nickname: string;
+  mobile?: number;
+  avatar: string;
+  sex: number;
+  client_id: string;
+  client_type: 'android' | 'ios';
+  status: number;
 }
 
 // 扩展的接口

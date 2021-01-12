@@ -68,6 +68,7 @@ export default class Chat {
       // 参数错误
       if (!dist_id || !content) {
         response_status_message.status = ENUM_MESSAGE_RESPONSE_STATUS.INVALID_PARAMS;
+        // 告诉用户，消息参数有错误
         socket.emit(id, response);
         return;
       }
@@ -140,7 +141,12 @@ export default class Chat {
     }
 
     // 告诉用户，消息发送成功
-    response_status_message.data = { id: result.insertId, hash, friend_id: dist_id };
+    response_status_message.data = {
+      hash,
+      id: result.insertId,
+      fid: dist_id,
+      succeeded: true,
+    };
     socket.emit(id, response);
 
     if (!friend_info.client_id) return;

@@ -7,7 +7,6 @@ import Util from '../helper/util';
 import User from '../service/user';
 import Message from '../service/message';
 import { Message as MessageData, FriendInfo } from '../interface/entity';
-import BlackList from '../helper/jwt.blacklist';
 
 const log = debug('kitim user');
 
@@ -58,6 +57,7 @@ router.put('/signIn', async (req, res) => {
   if (!userInfo || !userInfo.id) {
     return res.json(Util.fail('用户不存在或密码错误', 0));
   }
+
   const payload = {
     uid: userInfo.id,
   };
@@ -128,12 +128,7 @@ router.post('/signUp', async (req, res) => {
 router.put('/signOut', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
-  const token = Util.getToken(req);
-  const payload = jwt.decode(token);
-  if (Object.prototype.toString.call(payload) === '[object Object]') {
-    const exp: number = payload && (payload as any).exp;
-    BlackList.add(token, exp);
-  }
+
   await User.updateUserToken(uid, { token: '', platform: '' });
   return res.json(Util.success('ok'));
 });

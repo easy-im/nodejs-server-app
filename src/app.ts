@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import http from 'http';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
@@ -12,11 +12,11 @@ import userRouter from './routes/user';
 import Util from './helper/util';
 import SocketAuth from './socket/auth';
 import Chat from './socket/chat';
-import BlackList from './helper/jwt.blacklist';
+import User from './service/user';
 
 const log = debug('kitim');
 const isDev = process.env.NODE_ENV === 'development';
-const { jwt } = config;
+const { jwt: jwtConfig } = config;
 
 const app: Application = express();
 const httpServer: http.Server = http.createServer(app);
@@ -36,19 +36,20 @@ app.use(cookieParser());
 
 app.use(
   expressJwt({
-    secret: jwt.secret,
+    secret: jwtConfig.secret,
     algorithms: ['HS256'],
     getToken: Util.getToken,
-    isRevoked(req, payload, done) {
+    async isRevoked(req, payload, done) {
       const token = Util.getToken(req);
-      const isRevoked = BlackList.isTokenInList(token);
-      if (isRevoked) {
-        return done('invalid token', true);
-      }
+      const { uid } = payload;
+      if (!uid) return done(null, true);
+      // TODO 放到redis里面进行优化
+      const [, info] = await User.getUserInfoById(uid);
+      if (!info || !info.token || info.token !== token) return done(null, true);
       return done(null, false);
     },
   }).unless({
-    path: jwt.routeWhiteList,
+    path: jwtConfig.routeWhiteList,
   }),
 );
 
@@ -63,7 +64,7 @@ app.use((req, res, next) => {
 
 // 500 error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: { message: string; status: number; name: string }, req: Request, res: Response) => {
+app.use((err: any, _: Request, res: Response, _next: NextFunction) => {
   if (err.name === 'UnauthorizedError') {
     return res.json(Util.fail('invalid token', 401));
   }

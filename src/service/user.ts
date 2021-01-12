@@ -91,6 +91,7 @@ class User {
     try {
       const data = await db
         .table('view_user_friends')
+        .field(['friend_id as fid', 'nickname', 'remark', 'sex', 'avatar', 'client_id', 'client_type', 'status'])
         .where({
           uid,
         })
