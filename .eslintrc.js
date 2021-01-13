@@ -1,14 +1,8 @@
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  extends: [
-    'airbnb-base',
-    'plugin:@typescript-eslint/recommended',
-  ],
-  plugins: [
-    'import',
-    '@typescript-eslint',
-  ],
+  extends: ['airbnb-base', 'plugin:@typescript-eslint/recommended'],
+  plugins: ['import', '@typescript-eslint'],
   env: {
     es6: true,
     node: true,
@@ -46,5 +40,6 @@ module.exports = {
     'no-mixed-operators': 'off',
     camelcase: 'off',
     'consistent-return': 'off',
+    'object-curly-newline': 'off',
   },
 };

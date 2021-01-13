@@ -2,11 +2,13 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import debug from 'debug';
 import pinyin from 'pinyin';
+import { Message as MessageData, FriendInfo } from '../interface/entity';
 import config from '../config';
 import Util from '../helper/util';
 import User from '../service/user';
 import Message from '../service/message';
-import { Message as MessageData, FriendInfo } from '../interface/entity';
+import Relation from '../service/relation';
+import RelationRequest from '../service/relationRequest';
 
 const log = debug('kitim user');
 
@@ -101,7 +103,7 @@ router.post('/signUp', async (req, res) => {
   const [err, _user] = await User.getUserInfoByMobile(mobile);
   if (err) {
     log(err);
-    return res.json(Util.fail('数据库操作失败', 500));
+    return res.json(Util.fail('数据库查询失败', 500));
   }
   if (_user) {
     return res.json(Util.fail('手机号已存在', 0));
@@ -116,15 +118,159 @@ router.post('/signUp', async (req, res) => {
     sex: 0,
     create_time: +new Date(),
   });
+  if (err2 || !info.insertId) {
+    log(err2);
+    return res.json(Util.fail('数据库操作失败', 500));
+  }
+  return res.json(Util.success(info.insertId));
+});
+
+/**
+ * 搜索用户
+ *
+ * @method POST
+ * @param {number} mobile 手机号
+ */
+router.post('/search', async (req, res) => {
+  const { user } = req as any;
+  const { uid } = user || {};
+  let { mobile } = req.body;
+  mobile = `${mobile}`.trim();
+
+  if (!mobile || mobile.length !== 11 || !Util.isPhoneNumber(mobile)) {
+    return res.json(Util.success(null));
+  }
+  mobile = +mobile;
+  const [err, friend] = await User.getUserInfoByMobile(mobile);
+  if (err) {
+    log(err);
+    return res.json(Util.fail('数据库查询失败', 500));
+  }
+  if (!friend) {
+    return res.json(Util.success(null));
+  }
+  const [, info] = await Relation.getUserFriend(uid, friend.id);
+  const isFriend = !!info;
+  const isMe = +friend.id === +uid;
+
+  const [, relation] = await RelationRequest.getPendingRequest(uid, friend.id);
+
+  let status = 0;
+
+  if (isFriend || isMe) {
+    status = 1;
+  } else if (relation) {
+    status = 2;
+  }
+
+  return res.json(
+    Util.success({
+      ...friend,
+      status,
+    }),
+  );
+});
+
+/**
+ * 获取用户请求列表
+ *
+ * @method GET
+ */
+router.get('/friendRequest', async (req, res) => {
+  const { user } = req as any;
+  const { uid } = user || {};
+
+  const [err, list] = await RelationRequest.getRequestList(uid);
+  if (err) {
+    log(err);
+    return res.json(Util.fail('数据库查询失败', 500));
+  }
+
+  return res.json(Util.success(list));
+});
+
+/**
+ * 请求添加好友
+ *
+ * @method POST
+ * @param {number} fid 对方id
+ * @param {string} remark 备注
+ */
+router.post('/requestToBeFriend', async (req, res) => {
+  const { user } = req as any;
+  const { uid } = user || {};
+  const { fid, remark, message } = req.body;
+  const [err, friend] = await User.getUserInfoById(fid);
+  if (err) {
+    log(err);
+    return res.json(Util.fail('数据库查询失败', 500));
+  }
+  if (!friend) {
+    return res.json(Util.fail('用户不存在', 0));
+  }
+  const [err2, info] = await Relation.getUserFriend(uid, friend.id);
+  if (err2) {
+    log(err2);
+    return res.json(Util.fail('数据库查询失败', 500));
+  }
+  if (info) {
+    return res.json(Util.fail('已经是好友关系', 0));
+  }
+  const [err3, relation] = await RelationRequest.getPendingRequest(uid, friend.id);
+  if (err3) {
+    log(err3);
+    return res.json(Util.fail('数据库查询失败', 500));
+  }
+  if (relation) {
+    return res.json(Util.fail('已存在好友请求', 0));
+  }
+  const [err4, data] = await RelationRequest.createRequest({ uid, dist_id: friend.id, remark, message });
+  if (err4 || !data.insertId) {
+    log(err4);
+    return res.json(Util.fail('数据库操作失败', 500));
+  }
+  return res.json(Util.success(data.insertId));
+});
+
+/**
+ * 确认好友请求
+ *
+ * @method POST
+ * @param {number} id 请求id
+ * @param {boolean} agree 是否同意
+ */
+router.post('/dealFriendRequest', async (req, res) => {
+  const { user } = req as any;
+  const { uid } = user || {};
+  const { id, agree, remark } = req.body;
+  const [err, record] = await RelationRequest.getRequestId(id);
+  if (err) {
+    log(err);
+    return res.json(Util.fail('数据库查询失败', 500));
+  }
+  if (!record) {
+    return res.json(Util.fail('请求不存在', 0));
+  }
+  if (record.status !== 0) {
+    return res.json(Util.fail('该请求已被处理', 0));
+  }
+  if (record.dist_id !== uid) {
+    return res.json(Util.fail('越权处理', 0));
+  }
+  if (agree) {
+    const [err3] = await Relation.makeFriend(uid, remark, record.dist_id, record.remark);
+    if (err3) {
+      log(err3);
+      return res.json(Util.fail('数据库操作失败', 500));
+    }
+  }
+  const status = agree ? 1 : 2;
+  const [err2] = await RelationRequest.updateRequest(id, status);
   if (err2) {
     log(err2);
     return res.json(Util.fail('数据库操作失败', 500));
   }
-  const { insertId } = info;
-  if (!insertId) {
-    return res.json(Util.fail('数据库操作失败', 500));
-  }
-  return res.json(Util.success(true));
+  return res.json(Util.success({ id, status }));
 });
 
 /**

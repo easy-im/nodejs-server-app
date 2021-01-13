@@ -29,6 +29,7 @@ class User {
     try {
       const data = await db
         .table(this.table)
+        .field('id, nickname, avatar, mobile')
         .where({
           mobile,
         })
@@ -170,7 +171,7 @@ class User {
   }
 
   /**
-   * 获取用户群组
+   * 获取最后一个用户信息
    */
   async getLastUser() {
     try {
