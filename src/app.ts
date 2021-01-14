@@ -7,8 +7,9 @@ import { Server } from 'socket.io';
 import debug from 'debug';
 import expressJwt from 'express-jwt';
 import config from './config';
-import indexRouter from './routes';
-import userRouter from './routes/user';
+import IndexRouter from './routes';
+import UserRouter from './routes/user';
+import MessageRouter from './routes/message';
 import Util from './helper/util';
 import SocketAuth from './socket/auth';
 import Chat from './socket/chat';
@@ -53,8 +54,9 @@ app.use(
   }),
 );
 
-app.use('/', indexRouter);
-app.use('/api/user', userRouter);
+app.use('/', IndexRouter);
+app.use('/api/user', UserRouter);
+app.use('/api/message', MessageRouter);
 
 // catch 404 and forward to error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -12,8 +12,7 @@ class Message {
    */
   async createMessage(message: MessageData) {
     try {
-      const data = await db.table(this.table)
-        .add(message);
+      const data = await db.table(this.table).add(message);
       return [null, data];
     } catch (err) {
       return [err, null];
@@ -28,7 +27,8 @@ class Message {
    */
   async getUnreadMessage(uid: number) {
     try {
-      const data = await db.table(this.table)
+      const data = await db
+        .table(this.table)
         .where({
           dist_id: uid,
           dist_type: 1,
@@ -49,7 +49,8 @@ class Message {
    */
   async updateMessage(id: number, columns: Record<string, any>) {
     try {
-      const data = await db.table(this.table)
+      const data = await db
+        .table(this.table)
         .where({
           id,
         })
@@ -68,7 +69,8 @@ class Message {
    */
   async updateMultipleMessage(ids: number[], columns: Record<string, any>) {
     try {
-      const data = await db.table(this.table)
+      const data = await db
+        .table(this.table)
         .where({
           id: ['in', ids || []],
         })
