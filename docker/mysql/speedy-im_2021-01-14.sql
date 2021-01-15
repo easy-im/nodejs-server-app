@@ -6,8 +6,8 @@
 # https://github.com/sequelpro/sequelpro
 #
 # Host: 127.0.0.1 (MySQL 5.6.49)
-# Database: kitim
-# Generation Time: 2020-10-14 10:09:49 +0000
+# Database: speedy-im
+# Generation Time: 2021-01-14 11:43:04 +0000
 # ************************************************************
 
 
@@ -37,15 +37,6 @@ CREATE TABLE `group` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-LOCK TABLES `group` WRITE;
-/*!40000 ALTER TABLE `group` DISABLE KEYS */;
-
-INSERT INTO `group` (`id`, `name`, `avatar`, `intrduce`, `limit`, `create_uid`, `create_time`, `status`)
-VALUES
-	(1000,'测试一群','https://im.wangcai.me/speedy_avatar_7.jpg','测试一群',100,1000,1591349594288,1);
-
-/*!40000 ALTER TABLE `group` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table message
@@ -59,31 +50,16 @@ CREATE TABLE `message` (
   `hash` varchar(40) NOT NULL DEFAULT '',
   `dist_id` bigint(20) NOT NULL COMMENT '群聊是id是群的id',
   `dist_type` tinyint(2) NOT NULL DEFAULT '1' COMMENT '1 - 私聊 2 - 群聊',
-  `is_received` tinyint(2) NOT NULL DEFAULT '0' COMMENT '对方是否收到',
-  `is_sent` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否已经发送给对方',
   `content_type` varchar(20) NOT NULL DEFAULT 'text' COMMENT 'text,audio,image,video',
   `content` text NOT NULL COMMENT '内容或者地址',
   `create_time` bigint(20) NOT NULL,
+  `is_received` tinyint(2) NOT NULL DEFAULT '0' COMMENT '对方是否收到',
+  `is_sent` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否已经发送给对方',
+  `is_read` tinyint(2) NOT NULL DEFAULT '0',
   `status` tinyint(2) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-LOCK TABLES `message` WRITE;
-/*!40000 ALTER TABLE `message` DISABLE KEYS */;
-
-INSERT INTO `message` (`id`, `user_id`, `hash`, `dist_id`, `dist_type`, `is_received`, `is_sent`, `content_type`, `content`, `create_time`, `status`)
-VALUES
-	(1,1000,'',1001,1,0,0,'text','你好',1591349594288,1),
-	(2,1000,'',1002,1,0,0,'text','你也好',1591349594288,1),
-	(3,1000,'',1001,1,0,0,'text','在吗？',1591355800809,1),
-	(4,1001,'',1000,1,0,1,'text','你好',1591349594288,1),
-	(5,1002,'',1000,1,0,1,'text','你好',1591349594288,1),
-	(6,1003,'',1000,1,0,1,'text','你好',1591349594288,1),
-	(7,1000,'a7dbd60473e1fad7e4a2cb12d15876d9',1002,1,0,0,'text','dada',1602592829490,1),
-	(8,1000,'b8ff71585ec8b878872718ebee9e401d',1002,1,0,0,'text','12',1602593358750,1);
-
-/*!40000 ALTER TABLE `message` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table relation
@@ -100,20 +76,24 @@ CREATE TABLE `relation` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-LOCK TABLES `relation` WRITE;
-/*!40000 ALTER TABLE `relation` DISABLE KEYS */;
 
-INSERT INTO `relation` (`id`, `uid`, `friend_id`, `remark`, `status`)
-VALUES
-	(1,1000,1001,'',1),
-	(2,1000,1002,'',1),
-	(3,1000,1003,'',1),
-	(4,1001,1000,'',1),
-	(5,1002,1000,'',1),
-	(6,1003,1000,'',1);
 
-/*!40000 ALTER TABLE `relation` ENABLE KEYS */;
-UNLOCK TABLES;
+# Dump of table relation_request
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `relation_request`;
+
+CREATE TABLE `relation_request` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `uid` bigint(20) NOT NULL,
+  `dist_id` bigint(20) NOT NULL,
+  `message` varchar(512) DEFAULT NULL,
+  `remark` varchar(512) DEFAULT NULL,
+  `create_time` bigint(20) DEFAULT NULL,
+  `status` tinyint(2) NOT NULL DEFAULT '0' COMMENT '0 - 发起 1 - 同意 2 - 拒绝',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 
 # Dump of table role
@@ -122,21 +102,12 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `role`;
 
 CREATE TABLE `role` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL DEFAULT '',
   `status` tinyint(4) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-LOCK TABLES `role` WRITE;
-/*!40000 ALTER TABLE `role` DISABLE KEYS */;
-
-INSERT INTO `role` (`id`, `name`, `status`)
-VALUES
-	(1000,'管理员',1);
-
-/*!40000 ALTER TABLE `role` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table user
@@ -159,18 +130,6 @@ CREATE TABLE `user` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-LOCK TABLES `user` WRITE;
-/*!40000 ALTER TABLE `user` DISABLE KEYS */;
-
-INSERT INTO `user` (`id`, `nickname`, `mobile`, `password`, `avatar`, `sex`, `token`, `client_id`, `client_type`, `create_time`, `status`)
-VALUES
-	(1000,'罗老魔',13600000000,'81c4369bea82d8daafd75818497dc962033a1dcc','https://im.wangcai.me/speedy_avatar_6.jpg',0,'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjEwMDAsImlhdCI6MTYwMjU5MjI1NywiZXhwIjoxNjAzMTk3MDU3fQ.5n49dPHRqCf8i82rYlL1YknrIeCqSWhrNeUvFjEE9jA','/chat#sy6u7rmq0Ag-uxH-AAAC','android',1591349594288,1),
-	(1001,'小七',13600000001,'81c4369bea82d8daafd75818497dc962033a1dcc','https://im.wangcai.me/speedy_avatar_1.jpg',1,NULL,NULL,NULL,1591349594288,1),
-	(1002,'小白',13600000002,'81c4369bea82d8daafd75818497dc962033a1dcc','https://im.wangcai.me/speedy_avatar_2.jpg',1,NULL,NULL,NULL,1591349594288,1),
-	(1003,'小青',13600000003,'81c4369bea82d8daafd75818497dc962033a1dcc','https://im.wangcai.me/speedy_avatar_3.jpg',1,NULL,NULL,NULL,1591349594288,1);
-
-/*!40000 ALTER TABLE `user` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table user_group
@@ -188,15 +147,6 @@ CREATE TABLE `user_group` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-LOCK TABLES `user_group` WRITE;
-/*!40000 ALTER TABLE `user_group` DISABLE KEYS */;
-
-INSERT INTO `user_group` (`id`, `uid`, `group_id`, `remark`, `role_id`, `status`)
-VALUES
-	(1000,1000,1000,NULL,1000,1);
-
-/*!40000 ALTER TABLE `user_group` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table view_user_friends

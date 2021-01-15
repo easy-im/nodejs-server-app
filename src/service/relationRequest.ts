@@ -33,6 +33,14 @@ class RelationRequest {
     try {
       const data = await db
         .table(this.table)
+        .alias('a')
+        .join({
+          user: {
+            as: 'b',
+            on: { uid: 'id' },
+          },
+        })
+        .field(['a.*', 'b.nickname', 'b.avatar'])
         .where({
           dist_id: uid,
         })

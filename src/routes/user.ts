@@ -258,7 +258,7 @@ router.post('/dealFriendRequest', async (req, res) => {
     return res.json(Util.fail('越权处理', 0));
   }
   if (agree) {
-    const [err3] = await Relation.makeFriend(uid, remark, record.dist_id, record.remark);
+    const [err3] = await Relation.makeFriend(uid, remark, record.uid, record.remark);
     if (err3) {
       log(err3);
       return res.json(Util.fail('数据库操作失败', 500));
@@ -303,10 +303,16 @@ router.get('/friends', async (req, res) => {
   const others: any = [];
   data.forEach((item: FriendInfo) => {
     const name = item.remark || item.nickname;
-    const p = pinyin(name, {
-      style: pinyin.STYLE_FIRST_LETTER,
-    });
-    const firstLetter: string = (p && p[0] && p[0][0]) || '';
+    let firstLetter = '';
+    if (/^[\u4e00-\u9fa5]/.test(name)) {
+      const p = pinyin(name, {
+        style: pinyin.STYLE_FIRST_LETTER,
+      });
+      firstLetter = (p && p[0] && p[0][0]) || '';
+    } else if (/^[a-zA-Z]/.test(name)) {
+      firstLetter = name.substring(0, 1);
+    }
+
     if (firstLetter) {
       const letter = firstLetter.toLocaleUpperCase();
       if (!obj[letter]) {

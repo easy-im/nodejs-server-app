@@ -31,13 +31,12 @@ export default class Chat {
 
   setup() {
     this.nsp.on('connect', async (socket: Socket) => {
-      log('用户已连接');
-
       const { handshake } = socket;
       const { query } = handshake;
       const { token } = query as any;
       const user: any = jwt.verify(token, config.jwt.secret);
       const { uid } = user;
+      log('用户已连接', uid);
       await User.updateUserClientId(uid, socket.id);
       this.onMessage(socket, uid);
 
