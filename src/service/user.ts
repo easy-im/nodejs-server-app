@@ -173,9 +173,9 @@ class User {
   /**
    * 获取最后一个用户信息
    */
-  async getLastUser() {
+  async getUserByNickname(nickname: string) {
     try {
-      const data = await db.table(this.table).order('id desc').find();
+      const data = await db.table(this.table).where({ nickname }).find();
       return [null, data];
     } catch (err) {
       return [err, null];

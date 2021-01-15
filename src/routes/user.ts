@@ -64,7 +64,7 @@ router.put('/signIn', async (req, res) => {
     uid: userInfo.id,
   };
   const options = {
-    expiresIn: '7d',
+    expiresIn: '90d',
   };
   const token = jwt.sign(payload, config.jwt.secret, options);
   const [err2] = await User.updateUserToken(userInfo.id, { token, platform });
@@ -90,14 +90,19 @@ router.put('/signIn', async (req, res) => {
  * @param {string} password 密码
  */
 router.post('/signUp', async (req, res) => {
-  let { mobile, password = '' } = req.body;
+  let { mobile, password = '', nickname = '' } = req.body;
   password = password.trim();
+  nickname = nickname.trim();
+  mobile = `${mobile}`.trim();
 
   if (!mobile || mobile.length !== 11 || !Util.isPhoneNumber(mobile)) {
     return res.json(Util.fail('手机号不正确', 0));
   }
-  if (!password) {
-    return res.json(Util.fail('密码不能为空', 0));
+  if (!password || password.length < 6 || password.length > 18) {
+    return res.json(Util.fail('密码不合法', 0));
+  }
+  if (!nickname) {
+    return res.json(Util.fail('昵称不能为空', 0));
   }
   mobile = +mobile;
   const [err, _user] = await User.getUserInfoByMobile(mobile);
@@ -108,18 +113,25 @@ router.post('/signUp', async (req, res) => {
   if (_user) {
     return res.json(Util.fail('手机号已存在', 0));
   }
+  const [err2, _nick] = await User.getUserByNickname(nickname);
+  if (err2) {
+    log(err2);
+    return res.json(Util.fail('数据库查询失败', 500));
+  }
+  if (_nick) {
+    return res.json(Util.fail('昵称已被占用', 0));
+  }
   const passwordEncode = Util.encodePassword(password);
-  const [, lastUser] = await User.getLastUser();
-  const [err2, info] = await User.createUser({
+  const [err3, info] = await User.createUser({
     mobile,
+    nickname,
     password: passwordEncode,
-    nickname: `kitim_${lastUser?.id ? lastUser?.id + 1 : 'user'}`,
     avatar: `https://im.wangcai.me/speedy_avatar_${Util.getRandomInt(1, 8)}.jpg`,
     sex: 0,
     create_time: +new Date(),
   });
-  if (err2 || !info.insertId) {
-    log(err2);
+  if (err3 || !info.insertId) {
+    log(err3);
     return res.json(Util.fail('数据库操作失败', 500));
   }
   return res.json(Util.success(info.insertId));
