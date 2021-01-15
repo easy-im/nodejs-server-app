@@ -10,7 +10,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN yarn install && yarn build
+RUN yarn install --registry=https://registry.npm.taobao.org && yarn build
 
 EXPOSE 8360
 
