@@ -1,6 +1,6 @@
 dist
+data
 node_modules
-docker
+website
 yarn.lock
 package-lock.json
-website
