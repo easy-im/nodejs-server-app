@@ -9,7 +9,7 @@ class RelationRequest {
    * @param {number} id 请求ID
    * @returns 群信息
    */
-  async getRequestId(id: number) {
+  async getRequestById(id: number) {
     try {
       const data = await db
         .table(this.table)
@@ -92,6 +92,7 @@ class RelationRequest {
         message,
         remark,
         status: 0,
+        create_time: +new Date(),
       });
       return [null, data];
     } catch (err) {

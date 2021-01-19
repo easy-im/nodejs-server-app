@@ -255,7 +255,7 @@ router.post('/dealFriendRequest', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
   const { id, agree, remark } = req.body;
-  const [err, record] = await RelationRequest.getRequestId(id);
+  const [err, record] = await RelationRequest.getRequestById(id);
   if (err) {
     log(err);
     return res.json(Util.fail('数据库查询失败', 500));
