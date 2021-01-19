@@ -41,6 +41,7 @@ class RelationRequest {
           },
         })
         .field(['a.*', 'b.nickname', 'b.avatar'])
+        .order('create_time desc')
         .where({
           dist_id: uid,
         })
