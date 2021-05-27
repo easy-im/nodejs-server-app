@@ -15,7 +15,7 @@ import {
   ENUM_MESSAGE_RESPONSE_STATUS,
 } from '../enum/message';
 
-const log = debug('ws');
+const log = debug('kitim');
 
 export default class Chat {
   private namespace = 'chat';

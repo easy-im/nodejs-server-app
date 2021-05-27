@@ -4,7 +4,7 @@ import Util from '../helper/util';
 
 import Message from '../service/message';
 
-const log = debug('kitim message');
+const log = debug('kitim');
 
 const router = express.Router();
 

@@ -10,7 +10,7 @@ import Message from '../service/message';
 import Relation from '../service/relation';
 import RelationRequest from '../service/relationRequest';
 
-const log = debug('kitim user');
+const log = debug('kitim');
 
 const router = express.Router();
 
