@@ -10,10 +10,9 @@ import Message from '../service/message';
 import Relation from '../service/relation';
 import RelationRequest from '../service/relationRequest';
 
-const log = debug('kitim');
+const log = debug('easy-im');
 
 const router = express.Router();
-
 /**
  * 从token获取用户信息
  *
@@ -45,7 +44,7 @@ router.get('/info', async (req, res) => {
  * @param {string} password 密码
  * @param {'android' | 'ios' | 'web'} platform 登陆平台
  */
-router.put('/signIn', async (req, res) => {
+router.put('/login', async (req, res) => {
   const { mobile, password, platform = 'android' } = req.body;
   if (!mobile || mobile.length !== 11 || !password) {
     return res.json(Util.fail('用户不存在或密码错误', 0));
@@ -89,7 +88,7 @@ router.put('/signIn', async (req, res) => {
  * @param {number} mobile 手机号
  * @param {string} password 密码
  */
-router.post('/signUp', async (req, res) => {
+router.post('/register', async (req, res) => {
   let { mobile, password = '', nickname = '' } = req.body;
   password = password.trim();
   nickname = nickname.trim();
@@ -126,7 +125,7 @@ router.post('/signUp', async (req, res) => {
     mobile,
     nickname,
     password: passwordEncode,
-    avatar: `https://im.wangcai.me/speedy_avatar_${Util.getRandomInt(1, 8)}.jpg`,
+    avatar: `https://img.qiuzhihu.cn/im/app/avatar/${Util.getRandomInt(1, 8)}.jpeg`,
     sex: 0,
     create_time: +new Date(),
   });
@@ -288,7 +287,7 @@ router.post('/dealFriendRequest', async (req, res) => {
 /**
  * 注销登录
  */
-router.put('/signOut', async (req, res) => {
+router.put('/logout', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
 

@@ -18,15 +18,10 @@ const defaults = {
     password: '123456',
     database: 'speedy-im',
   },
-  passwordSecret: 'kitim',
+  passwordSecret: 'easy-im',
   jwt: {
-    secret: 'kitim',
-    routeWhiteList: [
-      '/',
-      '/favicon.ico',
-      '/api/user/signIn',
-      '/api/user/signUp',
-    ],
+    secret: 'easy-im',
+    routeWhiteList: ['/', '/favicon.ico', '/api/user/signIn', '/api/user/signUp'],
   },
 };
 
