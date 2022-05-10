@@ -16,12 +16,12 @@ const defaults = {
     port: 3307,
     user: 'root',
     password: '123456',
-    database: 'speedy-im',
+    database: 'easy-im',
   },
   passwordSecret: 'easy-im',
   jwt: {
     secret: 'easy-im',
-    routeWhiteList: ['/', '/favicon.ico', '/api/user/signIn', '/api/user/signUp'],
+    routeWhiteList: ['/', '/favicon.ico', '/api/user/login', '/api/user/logout'],
   },
 };
 
