@@ -1,7 +1,7 @@
 version: '3'
 services:
-  kitim:
+  easyim:
     build: ./
-    container_name: kitim
+    container_name: easyim
     ports:
       - '3005:8360'
