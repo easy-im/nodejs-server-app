@@ -6,8 +6,8 @@ import Group from '../service/group';
 import Relation from '../service/relation';
 import Message from '../service/message';
 import config from '../config';
-import { MessageRecord, Message as MessageData } from '../interface/entity';
-import { CHAT_MESSAGE, RESPONSE_MESSAGE, SOCKET_RESPONSE } from '../interface/response';
+import { MessageRecord, Message as MessageData } from '../types/database';
+import { CHAT_MESSAGE, RESPONSE_MESSAGE, SOCKET_RESPONSE } from '../types/response';
 import {
   MESSAGE_DIST_TYPE,
   MESSAGE_CONTENT_TYPE,

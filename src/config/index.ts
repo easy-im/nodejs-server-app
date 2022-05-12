@@ -1,6 +1,6 @@
 import dev from './dev';
 import prod from './prod';
-import { EnvType, Config } from '../interface/config';
+import { EnvType, Config } from '../types/config';
 
 const env: EnvType = (process.env.NODE_ENV as EnvType) || 'local';
 

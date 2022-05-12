@@ -1,16 +1,13 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import debug from 'debug';
 import pinyin from 'pinyin';
-import { Message as MessageData, FriendInfo } from '../interface/entity';
+import { Message as MessageData, FriendInfo } from '../types/database';
 import config from '../config';
 import Util from '../helper/util';
 import User from '../service/user';
 import Message from '../service/message';
 import Relation from '../service/relation';
 import RelationRequest from '../service/relationRequest';
-
-const log = debug('easy-im');
 
 const router = express.Router();
 /**
@@ -24,7 +21,6 @@ router.get('/info', async (req, res) => {
   const { uid } = user || {};
   const [err, info] = await User.getUserInfoById(+uid);
   if (err) {
-    log(err);
     return res.json(Util.fail('内部服务器错误', 500));
   }
   if (!info) {
@@ -52,7 +48,6 @@ router.put('/login', async (req, res) => {
   const passwordEncode = Util.encodePassword(password);
   const [err, userInfo] = await User.getUserInfoByPassword(mobile, passwordEncode);
   if (err) {
-    log(err);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   if (!userInfo || !userInfo.id) {
@@ -68,7 +63,6 @@ router.put('/login', async (req, res) => {
   const token = jwt.sign(payload, config.jwt.secret, options);
   const [err2] = await User.updateUserToken(userInfo.id, { token, platform });
   if (err2) {
-    log(err2);
     return res.json(Util.fail('数据库写入失败', 500));
   }
 
@@ -106,7 +100,6 @@ router.post('/register', async (req, res) => {
   mobile = +mobile;
   const [err, _user] = await User.getUserInfoByMobile(mobile);
   if (err) {
-    log(err);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   if (_user) {
@@ -114,14 +107,13 @@ router.post('/register', async (req, res) => {
   }
   const [err2, _nick] = await User.getUserByNickname(nickname);
   if (err2) {
-    log(err2);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   if (_nick) {
     return res.json(Util.fail('昵称已被占用', 0));
   }
   const passwordEncode = Util.encodePassword(password);
-  const [err3, info] = await User.createUser({
+  const [userId] = await User.createUser({
     mobile,
     nickname,
     password: passwordEncode,
@@ -129,11 +121,10 @@ router.post('/register', async (req, res) => {
     sex: 0,
     create_time: +new Date(),
   });
-  if (err3 || !info.insertId) {
-    log(err3);
+  if (userId) {
     return res.json(Util.fail('数据库操作失败', 500));
   }
-  return res.json(Util.success(info.insertId));
+  return res.json(Util.success(userId));
 });
 
 /**
@@ -154,7 +145,6 @@ router.post('/search', async (req, res) => {
   mobile = +mobile;
   const [err, friend] = await User.getUserInfoByMobile(mobile);
   if (err) {
-    log(err);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   if (!friend) {
@@ -193,7 +183,6 @@ router.get('/friendRequest', async (req, res) => {
 
   const [err, list] = await RelationRequest.getRequestList(uid);
   if (err) {
-    log(err);
     return res.json(Util.fail('数据库查询失败', 500));
   }
 
@@ -213,7 +202,6 @@ router.post('/requestToBeFriend', async (req, res) => {
   const { fid, remark, message } = req.body;
   const [err, friend] = await User.getUserInfoById(fid);
   if (err) {
-    log(err);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   if (!friend) {
@@ -221,7 +209,6 @@ router.post('/requestToBeFriend', async (req, res) => {
   }
   const [err2, info] = await Relation.getUserFriend(uid, friend.id);
   if (err2) {
-    log(err2);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   if (info) {
@@ -229,7 +216,6 @@ router.post('/requestToBeFriend', async (req, res) => {
   }
   const [err3, relation] = await RelationRequest.getPendingRequest(uid, friend.id);
   if (err3) {
-    log(err3);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   if (relation) {
@@ -237,7 +223,6 @@ router.post('/requestToBeFriend', async (req, res) => {
   }
   const [err4, data] = await RelationRequest.createRequest({ uid, dist_id: friend.id, remark, message });
   if (err4 || !data.insertId) {
-    log(err4);
     return res.json(Util.fail('数据库操作失败', 500));
   }
   return res.json(Util.success(data.insertId));
@@ -256,7 +241,6 @@ router.post('/dealFriendRequest', async (req, res) => {
   const { id, agree, remark } = req.body;
   const [err, record] = await RelationRequest.getRequestById(id);
   if (err) {
-    log(err);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   if (!record) {
@@ -271,14 +255,12 @@ router.post('/dealFriendRequest', async (req, res) => {
   if (agree) {
     const [err3] = await Relation.makeFriend(uid, remark, record.uid, record.remark);
     if (err3) {
-      log(err3);
       return res.json(Util.fail('数据库操作失败', 500));
     }
   }
   const status = agree ? 1 : 2;
   const [err2] = await RelationRequest.updateRequest(id, status);
   if (err2) {
-    log(err2);
     return res.json(Util.fail('数据库操作失败', 500));
   }
   return res.json(Util.success({ id, status }));
@@ -306,7 +288,6 @@ router.get('/friends', async (req, res) => {
   const { uid } = user || {};
   const [err, data] = await User.getRelationByUid(uid);
   if (err) {
-    log(err);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   let final: { key: string; list: any[] }[] = [];
@@ -361,7 +342,6 @@ router.get('/groups', async (req, res) => {
   const { uid } = user || {};
   const [err, list] = await User.getUserGroup(uid);
   if (err) {
-    log(err);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   return res.json(Util.success(list));
@@ -379,7 +359,6 @@ router.get('/unreadMessage', async (req, res) => {
   // TODO，分页
   const [err, list] = await Message.getUnreadMessage(uid);
   if (err) {
-    log(err);
     return res.json(Util.fail('数据库查询失败', 500));
   }
   const tmp: number[] = [];

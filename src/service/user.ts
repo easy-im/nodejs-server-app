@@ -1,6 +1,7 @@
-import db from '../lib/db';
+import BasicModel from './base';
+import { UserTb } from '../types/database';
 
-class User {
+class Service extends BasicModel<UserTb> {
   private table = 'user';
 
   /**
@@ -10,13 +11,8 @@ class User {
    * @param {string} info.password 用户密码
    * @returns 用户信息
    */
-  async createUser(info: Record<string, number | string>) {
-    try {
-      const data = await db.table(this.table).add(info);
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+  async createUser(info: Partial<UserTb>) {
+    return this.insert(info);
   }
 
   /**
@@ -26,18 +22,8 @@ class User {
    * @returns 用户信息
    */
   async getUserInfoByMobile(mobile: number) {
-    try {
-      const data = await db
-        .table(this.table)
-        .field('id, nickname, avatar, mobile')
-        .where({
-          mobile,
-        })
-        .find();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    const [data] = await this.queryBuilder.where({ mobile }).select('id', 'nickname', 'avatar', 'mobile');
+    return data;
   }
 
   /**
@@ -47,17 +33,9 @@ class User {
    * @returns 用户信息
    */
   async getUserInfoById(uid: number) {
-    try {
-      const data = await db
-        .table(this.table)
-        .where({
-          id: uid,
-        })
-        .find();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.find({
+      id: uid,
+    });
   }
 
   /**
@@ -68,18 +46,10 @@ class User {
    * @returns 用户信息
    */
   async getUserInfoByPassword(mobile: number, password: string) {
-    try {
-      const data = await db
-        .table(this.table)
-        .where({
-          mobile,
-          password,
-        })
-        .find();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.find({
+      mobile,
+      password,
+    });
   }
 
   /**
@@ -89,18 +59,9 @@ class User {
    * @returns 好友列表
    */
   async getRelationByUid(uid: number) {
-    try {
-      const data = await db
-        .table('view_user_friends')
-        .field(['friend_id as fid', 'nickname', 'remark', 'sex', 'avatar', 'client_id', 'client_type', 'status'])
-        .where({
-          uid,
-        })
-        .select();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.knex('view_user_friends')
+      .where({ uid })
+      .select('friend_id as fid', 'nickname', 'remark', 'sex', 'avatar', 'client_id', 'client_type', 'status');
   }
 
   /**
@@ -183,4 +144,5 @@ class User {
   }
 }
 
-export default new User();
+const UserService = new Service('app_user');
+export default UserService;

@@ -27,3 +27,10 @@ export enum MESSAGE_RESPONSE_STATUS {
   NOT_FRIEND_OF_MINE, // 对方不是自己好友
   NOT_IN_GROUP,
 }
+
+export enum PLATFORM {
+  ANDROID = 'android',
+  IOS = 'ios',
+  WINDOWS = 'windows',
+  MACOS = 'macos',
+}

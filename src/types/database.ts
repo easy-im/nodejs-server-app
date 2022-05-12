@@ -1,4 +1,18 @@
-import { MESSAGE_CONTENT_TYPE, MESSAGE_DIST_TYPE } from '../constants/enum';
+import { MESSAGE_CONTENT_TYPE, MESSAGE_DIST_TYPE, PLATFORM } from '../constants/enum';
+
+export interface UserTb {
+  id: number;
+  nickname: string;
+  mobile: number;
+  password: string;
+  avatar: string;
+  sex: number;
+  token: string;
+  client_id: string;
+  client_type: PLATFORM;
+  create_time: number;
+  status: number;
+}
 
 export interface Message {
   id?: number;
@@ -10,20 +24,6 @@ export interface Message {
   is_received?: number;
   is_sent?: number;
   content: string;
-  create_time: number;
-  status: number;
-}
-
-export interface User {
-  id: number;
-  nickname: string;
-  mobile: number;
-  password: string;
-  avatar: string;
-  sex: number;
-  token: string;
-  client_id: string;
-  client_type: 'android' | 'ios';
   create_time: number;
   status: number;
 }

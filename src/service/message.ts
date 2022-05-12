@@ -1,5 +1,5 @@
 import db from '../lib/db';
-import { Message as MessageData } from '../interface/entity';
+import { Message as MessageData } from '../types/database';
 
 class Message {
   private table = 'message';
