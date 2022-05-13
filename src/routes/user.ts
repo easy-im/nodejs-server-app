@@ -1,7 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import pinyin from 'pinyin';
-import { Message as MessageData, FriendInfo } from '../types/database';
+import { MessageTb } from '../types/database';
 import config from '../config';
 import Util from '../helper/util';
 import UserService from '../service/user';
@@ -9,6 +9,7 @@ import MessageService from '../service/message';
 import RelationService from '../service/relation';
 import RelationRequestService from '../service/relationRequest';
 import { GENDER, PLATFORM, SEARCH_USER_TYPE } from '../constants/enum';
+import { FriendInfo } from '../types';
 
 const router = express.Router();
 /**
@@ -334,7 +335,7 @@ router.get('/unreadMessage', async (req, res) => {
   const list = await MessageService.getUnreadMessage(uid);
   const tmp: number[] = [];
 
-  const result = list.map((item: MessageData) => {
+  const result = list.map((item: MessageTb) => {
     tmp.push(item.id as number);
     return {
       ...item,

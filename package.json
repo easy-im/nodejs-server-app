@@ -8,7 +8,9 @@
     "prod": "cross-env NODE_ENV=production node dist/app.js",
     "build": "rimraf dist && tsc -p .",
     "lint": "eslint src --ext .ts",
-    "lint-fix": "eslint src --ext .ts --fix"
+    "lint-fix": "eslint src --ext .ts --fix",
+    "pre-commit": "yarn type:check && lint-staged",
+    "type:check": "tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -45,6 +47,20 @@
     "nodemon": "^2.0.4",
     "rimraf": "^3.0.2",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.3"
+    "typescript": "^4.0.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn pre-commit"
+    }
+  },
+  "lint-staged": {
+    "linters": {
+      "**/*.{js,jsx,ts,tsx,json}": [
+        "prettier --write",
+        "eslint",
+        "git add"
+      ]
+    }
   }
 }

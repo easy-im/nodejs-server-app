@@ -45,7 +45,7 @@ app.use(
       const { uid } = payload;
       if (!uid) return done(null, true);
       // TODO 放到redis里面进行优化
-      const [, info] = await User.getUserInfoById(uid);
+      const info = await User.getUserInfoById(uid);
       if (!info || !info.token || info.token !== token) return done(null, true);
       return done(null, false);
     },
