@@ -1,6 +1,7 @@
-import db from '../lib/db';
+import BasicModel from './base';
+import { RelationRequest } from '../types/database';
 
-class RelationRequest {
+class Service extends BasicModel<RelationRequest> {
   private table = 'relation_request';
 
   /**
@@ -10,17 +11,7 @@ class RelationRequest {
    * @returns 群信息
    */
   async getRequestById(id: number) {
-    try {
-      const data = await db
-        .table(this.table)
-        .where({
-          id,
-        })
-        .find();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.find({ id });
   }
 
   /**
@@ -30,26 +21,12 @@ class RelationRequest {
    * @returns 群信息
    */
   async getRequestList(uid: number) {
-    try {
-      const data = await db
-        .table(this.table)
-        .alias('a')
-        .join({
-          user: {
-            as: 'b',
-            on: { uid: 'id' },
-          },
-        })
-        .field(['a.*', 'b.nickname', 'b.avatar'])
-        .order('create_time desc')
-        .where({
-          dist_id: uid,
-        })
-        .select();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.knex('app_relation_request as relation_request')
+      .leftJoin('app_user as user', 'relation_request.uid', 'user.id')
+      .where({
+        'relation_request.uid': uid,
+      })
+      .select('relation_request.*', 'user.nickname', 'user.avatar');
   }
 
   /**
@@ -60,19 +37,11 @@ class RelationRequest {
    * @returns 群信息
    */
   async getPendingRequest(uid: number, distId: number) {
-    try {
-      const data = await db
-        .table(this.table)
-        .where({
-          uid,
-          dist_id: distId,
-          status: 0,
-        })
-        .find();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.find({
+      uid,
+      dist_id: distId,
+      status: 0,
+    });
   }
 
   /**
@@ -85,19 +54,13 @@ class RelationRequest {
    */
   async createRequest(payload: { uid: number; dist_id: number; remark: string; message: string }) {
     const { uid, dist_id, message, remark } = payload;
-    try {
-      const data = await db.table(this.table).add({
-        uid,
-        dist_id,
-        message,
-        remark,
-        status: 0,
-        create_time: +new Date(),
-      });
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.insert({
+      uid,
+      dist_id,
+      message,
+      remark,
+      status: 0,
+    });
   }
 
   /**
@@ -109,15 +72,14 @@ class RelationRequest {
    * @returns 群信息
    */
   async updateRequest(id: number, status: number) {
-    try {
-      const data = await db.table(this.table).where({ id }).update({
+    return this.update(
+      { id },
+      {
         status,
-      });
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+      },
+    );
   }
 }
 
-export default new RelationRequest();
+const RelationRequestService = new Service('app_relation_request');
+export default RelationRequestService;

@@ -29,8 +29,26 @@ export enum MESSAGE_RESPONSE_STATUS {
 }
 
 export enum PLATFORM {
+  UNKNOWN = '',
   ANDROID = 'android',
   IOS = 'ios',
   WINDOWS = 'windows',
   MACOS = 'macos',
+}
+
+export enum SEARCH_USER_TYPE {
+  NORMAL = 0,
+  DISABLED,
+  IN_REQUEST,
+}
+
+export enum GENDER {
+  UNKNOWN = 0,
+  MAN,
+  WOMAN,
+}
+
+export enum YES_NO {
+  NO = 0,
+  YES,
 }

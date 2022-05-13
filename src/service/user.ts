@@ -1,9 +1,8 @@
 import BasicModel from './base';
 import { UserTb } from '../types/database';
+import { PLATFORM } from '../constants/enum';
 
 class Service extends BasicModel<UserTb> {
-  private table = 'user';
-
   /**
    * 创建用户
    *
@@ -21,7 +20,7 @@ class Service extends BasicModel<UserTb> {
    * @param {number} mobile 手机号
    * @returns 用户信息
    */
-  async getUserInfoByMobile(mobile: number) {
+  async getUserInfoByMobile(mobile: number): Promise<Pick<UserTb, 'id' | 'nickname' | 'avatar' | 'mobile'>> {
     const [data] = await this.queryBuilder.where({ mobile }).select('id', 'nickname', 'avatar', 'mobile');
     return data;
   }
@@ -72,21 +71,16 @@ class Service extends BasicModel<UserTb> {
    * @param {string} payload.platform 平台
    * @returns 用户信息
    */
-  async updateUserToken(uid: number, payload: { token: string; platform: string }) {
-    try {
-      const data = await db
-        .table(this.table)
-        .where({
-          id: uid,
-        })
-        .update({
-          token: payload.token,
-          client_type: payload.platform,
-        });
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+  async updateUserToken(uid: number, payload: { token: string; platform: PLATFORM }) {
+    return this.update(
+      {
+        id: uid,
+      },
+      {
+        token: payload.token,
+        client_type: payload.platform,
+      },
+    );
   }
 
   /**
@@ -97,19 +91,14 @@ class Service extends BasicModel<UserTb> {
    * @returns 用户信息
    */
   async updateUserClientId(uid: number, client_id: string) {
-    try {
-      const data = await db
-        .table(this.table)
-        .where({
-          id: uid,
-        })
-        .update({
-          client_id,
-        });
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.update(
+      {
+        id: uid,
+      },
+      {
+        client_id,
+      },
+    );
   }
 
   /**
@@ -118,29 +107,14 @@ class Service extends BasicModel<UserTb> {
    * @param {number} uid 用户ID
    */
   async getUserGroup(uid: number) {
-    try {
-      const data = await db
-        .table('view_user_group')
-        .where({
-          uid,
-        })
-        .select();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.knex('view_user_group').where({ uid }).select('*');
   }
 
   /**
-   * 获取最后一个用户信息
+   * 通过昵称查找用户胡
    */
   async getUserByNickname(nickname: string) {
-    try {
-      const data = await db.table(this.table).where({ nickname }).find();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.find({ nickname });
   }
 }
 

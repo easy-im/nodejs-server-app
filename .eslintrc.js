@@ -41,5 +41,6 @@ module.exports = {
     camelcase: 'off',
     'consistent-return': 'off',
     'object-curly-newline': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
   },
 };

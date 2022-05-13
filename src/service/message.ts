@@ -1,22 +1,15 @@
-import db from '../lib/db';
-import { Message as MessageData } from '../types/database';
+import { MessageTb } from '../types/database';
+import BasicModel from './base';
 
-class Message {
-  private table = 'message';
-
+class Service extends BasicModel<MessageTb> {
   /**
    * 创建一条信息
    *
    * @param {MessageData} message 消息
    * @returns
    */
-  async createMessage(message: MessageData) {
-    try {
-      const data = await db.table(this.table).add(message);
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+  async createMessage(message: MessageTb) {
+    return this.insert(message);
   }
 
   /**
@@ -26,19 +19,14 @@ class Message {
    * @returns 未读消息列表
    */
   async getUnreadMessage(uid: number) {
-    try {
-      const data = await db
-        .table(this.table)
-        .where({
-          dist_id: uid,
-          dist_type: 1,
-        })
-        .where({ 'is_received|is_sent': 0 })
-        .select();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    // TODO: 确认一下写法
+    return this.queryBuilder
+      .where({
+        dist_id: uid,
+        dist_type: 1,
+      })
+      .whereRaw('is_received = ? OR is_sent = ?', [0, 0])
+      .select('*');
   }
 
   /**
@@ -48,17 +36,12 @@ class Message {
    * @param {Record<string, any>} columns 数据列
    */
   async updateMessage(id: number, columns: Record<string, any>) {
-    try {
-      const data = await db
-        .table(this.table)
-        .where({
-          id,
-        })
-        .update(columns);
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.update(
+      {
+        id,
+      },
+      columns,
+    );
   }
 
   /**
@@ -68,18 +51,9 @@ class Message {
    * @param {Record<string, any>[]} columns 数据列
    */
   async updateMultipleMessage(ids: number[], columns: Record<string, any>) {
-    try {
-      const data = await db
-        .table(this.table)
-        .where({
-          id: ['in', ids || []],
-        })
-        .update(columns);
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.queryBuilder.whereIn('id', ids || []).update(columns);
   }
 }
 
-export default new Message();
+const MessageService = new Service('app_message');
+export default MessageService;

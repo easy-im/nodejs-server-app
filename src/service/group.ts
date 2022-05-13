@@ -1,8 +1,7 @@
-import db from '../lib/db';
+import BasicModel from './base';
+import { GroupTb } from '../types/database';
 
-class Group {
-  private table = 'user_group';
-
+class Service extends BasicModel<GroupTb> {
   /**
    * 获取用户加入的某个群
    *
@@ -11,19 +10,9 @@ class Group {
    * @returns 群信息
    */
   async getUserGroup(uid: number, groupId: number) {
-    try {
-      const data = await db.table(this.table)
-        .where({
-          uid,
-          group_id: groupId,
-          status: 1,
-        })
-        .select();
-      return [null, data];
-    } catch (err) {
-      return [err, null];
-    }
+    return this.queryBuilder.where({ uid, group_id: groupId, status: 1 }).select();
   }
 }
 
-export default new Group();
+const GroupService = new Service('app_group');
+export default GroupService;

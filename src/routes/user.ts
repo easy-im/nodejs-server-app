@@ -4,10 +4,11 @@ import pinyin from 'pinyin';
 import { Message as MessageData, FriendInfo } from '../types/database';
 import config from '../config';
 import Util from '../helper/util';
-import User from '../service/user';
-import Message from '../service/message';
-import Relation from '../service/relation';
-import RelationRequest from '../service/relationRequest';
+import UserService from '../service/user';
+import MessageService from '../service/message';
+import RelationService from '../service/relation';
+import RelationRequestService from '../service/relationRequest';
+import { GENDER, PLATFORM, SEARCH_USER_TYPE } from '../constants/enum';
 
 const router = express.Router();
 /**
@@ -19,15 +20,15 @@ const router = express.Router();
 router.get('/info', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
-  const [err, info] = await User.getUserInfoById(+uid);
-  if (err) {
-    return res.json(Util.fail('内部服务器错误', 500));
-  }
+  const info = await UserService.getUserInfoById(+uid);
   if (!info) {
     return res.json(Util.success('用户不存在', 401));
   }
+  // @ts-ignore
   delete info.password;
+  // @ts-ignore
   delete info.client_id;
+  // @ts-ignore
   delete info.create_time;
   return res.json(Util.success(info));
 });
@@ -46,10 +47,8 @@ router.put('/login', async (req, res) => {
     return res.json(Util.fail('用户不存在或密码错误', 0));
   }
   const passwordEncode = Util.encodePassword(password);
-  const [err, userInfo] = await User.getUserInfoByPassword(mobile, passwordEncode);
-  if (err) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
+  const userInfo = await UserService.getUserInfoByPassword(mobile, passwordEncode);
+
   if (!userInfo || !userInfo.id) {
     return res.json(Util.fail('用户不存在或密码错误', 0));
   }
@@ -61,11 +60,9 @@ router.put('/login', async (req, res) => {
     expiresIn: '90d',
   };
   const token = jwt.sign(payload, config.jwt.secret, options);
-  const [err2] = await User.updateUserToken(userInfo.id, { token, platform });
-  if (err2) {
-    return res.json(Util.fail('数据库写入失败', 500));
-  }
+  await UserService.updateUserToken(userInfo.id, { token, platform });
 
+  // @ts-ignore
   delete userInfo.password;
   return res.json(
     Util.success({
@@ -97,34 +94,42 @@ router.post('/register', async (req, res) => {
   if (!nickname) {
     return res.json(Util.fail('昵称不能为空', 0));
   }
+
   mobile = +mobile;
-  const [err, _user] = await User.getUserInfoByMobile(mobile);
-  if (err) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
-  if (_user) {
+  const mobileUser = await UserService.getUserInfoByMobile(mobile);
+  if (mobileUser) {
     return res.json(Util.fail('手机号已存在', 0));
   }
-  const [err2, _nick] = await User.getUserByNickname(nickname);
-  if (err2) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
-  if (_nick) {
+
+  const nickUser = await UserService.getUserByNickname(nickname);
+  if (nickUser) {
     return res.json(Util.fail('昵称已被占用', 0));
   }
+
   const passwordEncode = Util.encodePassword(password);
-  const [userId] = await User.createUser({
+  const [userId] = await UserService.createUser({
     mobile,
     nickname,
     password: passwordEncode,
     avatar: `https://img.qiuzhihu.cn/im/app/avatar/${Util.getRandomInt(1, 8)}.jpeg`,
-    sex: 0,
+    gender: GENDER.UNKNOWN,
     create_time: +new Date(),
   });
   if (userId) {
     return res.json(Util.fail('数据库操作失败', 500));
   }
   return res.json(Util.success(userId));
+});
+
+/**
+ * 注销登录
+ */
+router.put('/logout', async (req, res) => {
+  const { user } = req as any;
+  const { uid } = user || {};
+
+  await UserService.updateUserToken(uid, { token: '', platform: PLATFORM.UNKNOWN });
+  return res.json(Util.success('ok'));
 });
 
 /**
@@ -142,26 +147,27 @@ router.post('/search', async (req, res) => {
   if (!mobile || mobile.length !== 11 || !Util.isPhoneNumber(mobile)) {
     return res.json(Util.success(null));
   }
+
   mobile = +mobile;
-  const [err, friend] = await User.getUserInfoByMobile(mobile);
-  if (err) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
+  const friend = await UserService.getUserInfoByMobile(mobile);
   if (!friend) {
     return res.json(Util.success(null));
   }
-  const [, info] = await Relation.getUserFriend(uid, friend.id);
+
+  const info = await RelationService.getUserFriend(uid, friend.id);
   const isFriend = !!info;
   const isMe = +friend.id === +uid;
 
-  const [, relation] = await RelationRequest.getPendingRequest(uid, friend.id);
+  const relation = await RelationRequestService.getPendingRequest(uid, friend.id);
 
-  let status = 0;
+  let status = SEARCH_USER_TYPE.NORMAL;
 
   if (isFriend || isMe) {
-    status = 1;
+    // 搜索的是自己或自己的朋友
+    status = SEARCH_USER_TYPE.DISABLED;
   } else if (relation) {
-    status = 2;
+    // 搜索的用户已经发过请求，但还未同意
+    status = SEARCH_USER_TYPE.IN_REQUEST;
   }
 
   return res.json(
@@ -181,10 +187,7 @@ router.get('/friendRequest', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
 
-  const [err, list] = await RelationRequest.getRequestList(uid);
-  if (err) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
+  const list = await RelationRequestService.getRequestList(uid);
 
   return res.json(Util.success(list));
 });
@@ -200,32 +203,25 @@ router.post('/requestToBeFriend', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
   const { fid, remark, message } = req.body;
-  const [err, friend] = await User.getUserInfoById(fid);
-  if (err) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
+
+  const friend = await UserService.getUserInfoById(fid);
   if (!friend) {
     return res.json(Util.fail('用户不存在', 0));
   }
-  const [err2, info] = await Relation.getUserFriend(uid, friend.id);
-  if (err2) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
-  if (info) {
+
+  const isFriend = await RelationService.getUserFriend(uid, friend.id);
+  if (isFriend) {
     return res.json(Util.fail('已经是好友关系', 0));
   }
-  const [err3, relation] = await RelationRequest.getPendingRequest(uid, friend.id);
-  if (err3) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
+
+  const relation = await RelationRequestService.getPendingRequest(uid, friend.id);
   if (relation) {
-    return res.json(Util.fail('已存在好友请求', 0));
+    return res.json(Util.fail('已发送过好友请求', 0));
   }
-  const [err4, data] = await RelationRequest.createRequest({ uid, dist_id: friend.id, remark, message });
-  if (err4 || !data.insertId) {
-    return res.json(Util.fail('数据库操作失败', 500));
-  }
-  return res.json(Util.success(data.insertId));
+
+  const data = await RelationRequestService.createRequest({ uid, dist_id: friend.id, remark, message });
+
+  return res.json(Util.success(data));
 });
 
 /**
@@ -239,10 +235,8 @@ router.post('/dealFriendRequest', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
   const { id, agree, remark } = req.body;
-  const [err, record] = await RelationRequest.getRequestById(id);
-  if (err) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
+
+  const record = await RelationRequestService.getRequestById(id);
   if (!record) {
     return res.json(Util.fail('请求不存在', 0));
   }
@@ -252,29 +246,13 @@ router.post('/dealFriendRequest', async (req, res) => {
   if (record.dist_id !== uid) {
     return res.json(Util.fail('越权处理', 0));
   }
+
   if (agree) {
-    const [err3] = await Relation.makeFriend(uid, remark, record.uid, record.remark);
-    if (err3) {
-      return res.json(Util.fail('数据库操作失败', 500));
-    }
+    await RelationService.makeFriend(uid, remark, record.uid, record.remark);
   }
   const status = agree ? 1 : 2;
-  const [err2] = await RelationRequest.updateRequest(id, status);
-  if (err2) {
-    return res.json(Util.fail('数据库操作失败', 500));
-  }
+  await RelationRequestService.updateRequest(id, status);
   return res.json(Util.success({ id, status }));
-});
-
-/**
- * 注销登录
- */
-router.put('/logout', async (req, res) => {
-  const { user } = req as any;
-  const { uid } = user || {};
-
-  await User.updateUserToken(uid, { token: '', platform: '' });
-  return res.json(Util.success('ok'));
 });
 
 /**
@@ -286,10 +264,9 @@ router.put('/logout', async (req, res) => {
 router.get('/friends', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
-  const [err, data] = await User.getRelationByUid(uid);
-  if (err) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
+
+  const data = await UserService.getRelationByUid(uid);
+
   let final: { key: string; list: any[] }[] = [];
   const obj: any = {};
   const others: any = [];
@@ -340,10 +317,7 @@ router.get('/friends', async (req, res) => {
 router.get('/groups', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
-  const [err, list] = await User.getUserGroup(uid);
-  if (err) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
+  const list = await UserService.getUserGroup(uid);
   return res.json(Util.success(list));
 });
 
@@ -357,10 +331,7 @@ router.get('/unreadMessage', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
   // TODO，分页
-  const [err, list] = await Message.getUnreadMessage(uid);
-  if (err) {
-    return res.json(Util.fail('数据库查询失败', 500));
-  }
+  const list = await MessageService.getUnreadMessage(uid);
   const tmp: number[] = [];
 
   const result = list.map((item: MessageData) => {
@@ -371,7 +342,7 @@ router.get('/unreadMessage', async (req, res) => {
     };
   });
   if (tmp.length) {
-    Message.updateMultipleMessage(tmp, { is_sent: 1 });
+    MessageService.updateMultipleMessage(tmp, { is_sent: 1 });
   }
   return res.json(Util.success(result));
 });

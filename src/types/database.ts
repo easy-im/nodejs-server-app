@@ -1,20 +1,31 @@
-import { MESSAGE_CONTENT_TYPE, MESSAGE_DIST_TYPE, PLATFORM } from '../constants/enum';
+import { GENDER, MESSAGE_CONTENT_TYPE, MESSAGE_DIST_TYPE, PLATFORM } from '../constants/enum';
 
-export interface UserTb {
+export type UserTb = {
   id: number;
   nickname: string;
   mobile: number;
   password: string;
   avatar: string;
-  sex: number;
+  gender: GENDER;
   token: string;
   client_id: string;
   client_type: PLATFORM;
   create_time: number;
   status: number;
-}
+};
 
-export interface Message {
+export type GroupTb = {
+  id: number;
+  creator: number;
+  name: string;
+  avatar: string;
+  introduce: string;
+  limit: number;
+  create_time: number;
+  status: number;
+};
+
+export type MessageTb = {
   id?: number;
   hash: string;
   user_id: number;
@@ -26,21 +37,23 @@ export interface Message {
   content: string;
   create_time: number;
   status: number;
-}
+};
 
-export interface FriendInfo {
-  fid: number;
+export type RelationTb = {
+  id: number;
+  uid: number;
+  friend_id: number;
   remark: string;
-  nickname: string;
-  mobile?: number;
-  avatar: string;
-  sex: number;
-  client_id: string;
-  client_type: 'android' | 'ios';
+  create_time: number;
   status: number;
-}
+};
 
-// 扩展的接口
-export interface MessageRecord extends Message {
-  is_owner: 0 | 1;
-}
+export type RelationRequest = {
+  id: number;
+  uid: number;
+  dist_id: number;
+  message: string;
+  remark: string;
+  create_time: number;
+  status: number;
+};

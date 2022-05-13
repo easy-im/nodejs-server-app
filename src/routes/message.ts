@@ -1,10 +1,6 @@
 import express from 'express';
-import debug from 'debug';
 import Util from '../helper/util';
-
-import Message from '../service/message';
-
-const log = debug('kitim');
+import MessageService from '../service/message';
 
 const router = express.Router();
 
@@ -20,6 +16,7 @@ router.put('/status', async (req, res) => {
   const { ids = [], columns = {} } = req.body;
   const allowColumns = ['is_received', 'is_read'];
   const data: Record<string, number> = {};
+
   allowColumns.forEach((key) => {
     const item = columns[key];
     // eslint-disable-next-line no-restricted-globals
@@ -27,13 +24,14 @@ router.put('/status', async (req, res) => {
       data[key] = item;
     }
   });
+
   if (!Object.keys(data).length) {
     return res.json(Util.fail('参数不合法', 0));
   }
-  const [err] = await Message.updateMultipleMessage(ids, data);
-  if (err) {
-    log(err);
-    return res.json(Util.fail('数据库查询失败', 500));
+
+  const result = await MessageService.updateMultipleMessage(ids, data);
+  if (!result) {
+    return res.json(Util.fail('更新错误', 500));
   }
   return res.json(Util.success(null));
 });
