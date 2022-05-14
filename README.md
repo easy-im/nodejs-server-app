@@ -40,6 +40,7 @@ $ docker-compose up
 - 导入初始数据库，位置为`docker/mysql/kitim.sql`。
 
 ### MySQL 默认配置
+- mysql 版本为 5.7.35 (docker 安装的版本是8.x, 对于 `mysqljs` 包是无法连接数据库的)
 
 地址：127.0.0.1  
 端口：3307  
