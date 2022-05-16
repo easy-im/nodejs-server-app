@@ -52,3 +52,15 @@ export enum YES_NO {
   NO = 0,
   YES,
 }
+
+export enum RELATION_REQUEST_STATUS {
+  PROGRESS = 0,
+  AGREED,
+  DISAGREED,
+}
+
+export enum RELATION_STATUS {
+  DELETE = 0,
+  NORMAL,
+  BLOCK,
+}

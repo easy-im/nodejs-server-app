@@ -1,4 +1,12 @@
-import { GENDER, MESSAGE_CONTENT_TYPE, MESSAGE_DIST_TYPE, PLATFORM } from '../constants/enum';
+import {
+  GENDER,
+  MESSAGE_CONTENT_TYPE,
+  MESSAGE_DIST_TYPE,
+  PLATFORM,
+  RELATION_REQUEST_STATUS,
+  RELATION_STATUS,
+  YES_NO,
+} from '../constants/enum';
 
 export type UserTb = {
   id: number;
@@ -32,8 +40,8 @@ export type MessageTb = {
   dist_id: number;
   dist_type: MESSAGE_DIST_TYPE;
   content_type: MESSAGE_CONTENT_TYPE;
-  is_received?: number;
-  is_sent?: number;
+  is_received?: YES_NO;
+  is_sent?: YES_NO;
   content: string;
   create_time: number;
   status: number;
@@ -45,7 +53,7 @@ export type RelationTb = {
   friend_id: number;
   remark: string;
   create_time: number;
-  status: number;
+  status: RELATION_STATUS;
 };
 
 export type RelationRequest = {
@@ -55,5 +63,5 @@ export type RelationRequest = {
   message: string;
   remark: string;
   create_time: number;
-  status: number;
+  status: RELATION_REQUEST_STATUS;
 };

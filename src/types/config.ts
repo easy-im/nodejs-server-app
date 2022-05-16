@@ -7,4 +7,5 @@ export interface Config {
     routeWhiteList: string[];
   };
   passwordSecret: string; // 密码加密存储秘钥
+  cdnHost: string;
 }

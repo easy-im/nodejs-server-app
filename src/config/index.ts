@@ -23,6 +23,7 @@ const defaults = {
     secret: 'easy-im',
     routeWhiteList: ['/', '/favicon.ico', '/api/user/login', '/api/user/logout'],
   },
+  cdnHost: 'https://img.qiuzhihu.cn',
 };
 
 const config: Config = {
