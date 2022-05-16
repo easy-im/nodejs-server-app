@@ -60,7 +60,7 @@ class Service extends BasicModel<UserTb> {
   async getRelationByUid(uid: number) {
     return this.knex('view_user_friends')
       .where({ uid })
-      .select('friend_id as fid', 'nickname', 'remark', 'sex', 'avatar', 'client_id', 'client_type', 'status');
+      .select('friend_id as fid', 'nickname', 'remark', 'gender', 'avatar', 'client_id', 'client_type', 'status');
   }
 
   /**
