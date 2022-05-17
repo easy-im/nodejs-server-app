@@ -10,7 +10,7 @@ import RelationService from '../service/relation';
 import RelationRequestService from '../service/relationRequest';
 import { GENDER, PLATFORM, SEARCH_USER_TYPE, YES_NO } from '../constants/enum';
 import { FriendInfo } from '../types';
-import redis from 'src/helper/redis';
+import redis from '../helper/redis';
 
 const router = express.Router();
 /**
