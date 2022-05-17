@@ -13,7 +13,7 @@ import MessageRouter from './routes/message';
 import Util from './helper/util';
 import SocketAuth from './socket/auth';
 import Chat from './socket/chat';
-import User from './service/user';
+import redis from './helper/redis';
 
 const log = debug('kitim');
 const isDev = process.env.NODE_ENV === 'development';
@@ -40,14 +40,10 @@ app.use(
     secret: jwtConfig.secret,
     algorithms: ['HS256'],
     getToken: Util.getToken,
-    async isRevoked(req, payload, done) {
+    async isRevoked(req, _, done) {
       const token = Util.getToken(req);
-      const { uid } = payload;
-      if (!uid) return done(null, true);
-      // TODO 放到redis里面进行优化
-      const info = await User.getUserInfoById(uid);
-      if (!info || !info.token || info.token !== token) return done(null, true);
-      return done(null, false);
+      const exist = await redis.get(`easy_im_revoked_token_${token}`);
+      return done(null, !!exist);
     },
   }).unless({
     path: jwtConfig.routeWhiteList,

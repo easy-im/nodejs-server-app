@@ -2,10 +2,9 @@ import dev from './dev';
 import prod from './prod';
 import { EnvType, Config } from '../types/config';
 
-const env: EnvType = (process.env.NODE_ENV as EnvType) || 'local';
+const env: EnvType = (process.env.NODE_ENV as EnvType) || 'development';
 
 const configMap = {
-  local: {},
   development: dev,
   production: prod,
 };
@@ -18,12 +17,16 @@ const defaults = {
     password: '123456',
     database: 'easy-im',
   },
+  redis: {
+    host: '127.0.0.1',
+    port: 6379,
+    db: 0,
+  },
   passwordSecret: 'easy-im',
   jwt: {
     secret: 'easy-im',
     routeWhiteList: ['/', '/favicon.ico', '/api/user/login', '/api/user/logout'],
   },
-  cdnHost: 'https://img.qiuzhihu.cn',
 };
 
 const config: Config = {

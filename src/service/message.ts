@@ -19,7 +19,6 @@ class Service extends BasicModel<MessageTb> {
    * @returns 未读消息列表
    */
   async getUnreadMessage(uid: number) {
-    // TODO: 确认一下写法
     return this.queryBuilder
       .where({
         dist_id: uid,

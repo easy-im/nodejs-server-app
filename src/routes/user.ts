@@ -10,6 +10,7 @@ import RelationService from '../service/relation';
 import RelationRequestService from '../service/relationRequest';
 import { GENDER, PLATFORM, SEARCH_USER_TYPE, YES_NO } from '../constants/enum';
 import { FriendInfo } from '../types';
+import redis from 'src/helper/redis';
 
 const router = express.Router();
 /**
@@ -112,7 +113,7 @@ router.post('/register', async (req, res) => {
     mobile,
     nickname,
     password: passwordEncode,
-    avatar: `${config.cdnHost}/im/app/avatar/${Util.getRandomInt(1, 8)}.jpeg`,
+    avatar: `${config.storage?.cdn_domain}/im/app/avatar/${Util.getRandomInt(1, 8)}.jpeg`,
     gender: GENDER.UNKNOWN,
     create_time: +new Date(),
   });
@@ -126,11 +127,13 @@ router.post('/register', async (req, res) => {
  * 注销登录
  */
 router.put('/logout', async (req, res) => {
+  const token = Util.getToken(req);
   const { user } = req as any;
   const { uid } = user || {};
 
   await UserService.updateUserToken(uid, { token: '', platform: PLATFORM.UNKNOWN });
-  return res.json(Util.success('ok'));
+  const data = await redis.set(`easy_im_revoked_token_${token}`, 1, 'EX', 3600 * 24 * 90);
+  return res.json(Util.success(!!data));
 });
 
 /**
