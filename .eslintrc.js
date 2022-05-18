@@ -35,7 +35,7 @@ module.exports = {
       },
     ],
     'class-methods-use-this': 'off',
-    'no-console': ['error', { allow: ['warn'] }],
+    'no-console': 'off',
     'max-len': ['error', { code: 150 }],
     'no-mixed-operators': 'off',
     camelcase: 'off',

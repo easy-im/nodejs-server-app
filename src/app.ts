@@ -4,7 +4,6 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
 import { Server } from 'socket.io';
-import debug from 'debug';
 import expressJwt from 'express-jwt';
 import config from './config';
 import IndexRouter from './routes';
@@ -15,7 +14,6 @@ import SocketAuth from './socket/auth';
 import Chat from './socket/chat';
 import redis from './helper/redis';
 
-const log = debug('kitim');
 const isDev = process.env.NODE_ENV === 'development';
 const { jwt: jwtConfig } = config;
 
@@ -80,5 +78,5 @@ app.use((err: any, _: Request, res: Response, _next: NextFunction) => {
 });
 
 httpServer.listen(8360, () => {
-  log('IM 服务在 8360端口启动');
+  console.log('IM 服务在 8360端口启动');
 });

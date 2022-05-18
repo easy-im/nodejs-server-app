@@ -1,5 +1,5 @@
 import { Server, Namespace, Socket } from 'socket.io';
-import debug from 'debug';
+
 import jwt from 'jsonwebtoken';
 import User from '../service/user';
 import Group from '../service/group';
@@ -16,8 +16,6 @@ import {
   MESSAGE_RESPONSE_STATUS,
   YES_NO,
 } from '../constants/enum';
-
-const log = debug('easy-im');
 
 export default class Chat {
   private namespace = 'chat';
@@ -39,7 +37,7 @@ export default class Chat {
       const user: any = jwt.verify(token, config.jwt.secret);
       const { uid } = user;
 
-      log('用户已连接', uid);
+      console.log('用户已连接', uid);
       await User.updateUserClientId(uid, socket.id);
 
       // 开始监听数据交互
@@ -47,7 +45,7 @@ export default class Chat {
 
       // 用户下线
       socket.on('disconnect', (reason: string) => {
-        log('用户断开连接', reason);
+        console.log('用户断开连接', reason);
         User.updateUserClientId(uid, '');
       });
     });
@@ -55,7 +53,7 @@ export default class Chat {
 
   private onMessage(socket: Socket, uid: number) {
     socket.on('message', async (payload: { message: MessageRecord }) => {
-      log('收到消息：', payload.message);
+      console.log('收到消息：', payload.message);
 
       const { id } = socket;
       const { message } = payload;
