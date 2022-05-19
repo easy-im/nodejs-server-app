@@ -1,4 +1,5 @@
-export enum MESSAGE_DIST_TYPE {
+// 消息类型
+export enum MESSAGE_TYPE {
   PRIVATE = 1,
   GROUP = 2,
 }
@@ -11,7 +12,7 @@ export enum MESSAGE_CONTENT_TYPE {
 }
 
 // socket通信内容类型
-export enum SOCKET_MESSAGE_TYPE {
+export enum SOCKET_RESPONSE_TYPE {
   PRIVATE_CHAT = 1000,
   GROUP_CHAT,
   MESSAGE_STATUS_CONFIRM, // 消息发送状态确认

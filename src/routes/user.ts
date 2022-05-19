@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import pinyin from 'pinyin';
 import { MessageTb } from '../types/database';
 import config from '../config';
-import Util from '../helper/util';
+import { encodePassword, fail, getRandomInt, getToken, isPhoneNumber, success } from '../helper/util';
 import UserService from '../service/user';
 import MessageService from '../service/message';
 import RelationService from '../service/relation';
@@ -24,7 +24,7 @@ router.get('/info', async (req, res) => {
   const { uid } = user || {};
   const info = await UserService.getUserInfoById(+uid);
   if (!info) {
-    return res.json(Util.success('用户不存在', 401));
+    return res.json(success('用户不存在', 401));
   }
   // @ts-ignore
   delete info.password;
@@ -32,7 +32,7 @@ router.get('/info', async (req, res) => {
   delete info.client_id;
   // @ts-ignore
   delete info.create_time;
-  return res.json(Util.success(info));
+  return res.json(success(info));
 });
 
 /**
@@ -46,13 +46,13 @@ router.get('/info', async (req, res) => {
 router.put('/login', async (req, res) => {
   const { mobile, password, platform = 'android' } = req.body;
   if (!mobile || mobile.length !== 11 || !password) {
-    return res.json(Util.fail('用户不存在或密码错误', 0));
+    return res.json(fail('用户不存在或密码错误', 0));
   }
-  const passwordEncode = Util.encodePassword(password);
+  const passwordEncode = encodePassword(password);
   const userInfo = await UserService.getUserInfoByPassword(mobile, passwordEncode);
 
   if (!userInfo || !userInfo.id) {
-    return res.json(Util.fail('用户不存在或密码错误', 0));
+    return res.json(fail('用户不存在或密码错误', 0));
   }
 
   const payload = {
@@ -67,7 +67,7 @@ router.put('/login', async (req, res) => {
   // @ts-ignore
   delete userInfo.password;
   return res.json(
-    Util.success({
+    success({
       ...userInfo,
       token,
     }),
@@ -87,53 +87,53 @@ router.post('/register', async (req, res) => {
   nickname = nickname.trim();
   mobile = `${mobile}`.trim();
 
-  if (!mobile || mobile.length !== 11 || !Util.isPhoneNumber(mobile)) {
-    return res.json(Util.fail('手机号不正确', 0));
+  if (!mobile || mobile.length !== 11 || !isPhoneNumber(mobile)) {
+    return res.json(fail('手机号不正确', 0));
   }
   if (!password || password.length < 6 || password.length > 18) {
-    return res.json(Util.fail('密码不合法', 0));
+    return res.json(fail('密码不合法', 0));
   }
   if (!nickname) {
-    return res.json(Util.fail('昵称不能为空', 0));
+    return res.json(fail('昵称不能为空', 0));
   }
 
   mobile = +mobile;
   const mobileUser = await UserService.getUserInfoByMobile(mobile);
   if (mobileUser) {
-    return res.json(Util.fail('手机号已存在', 0));
+    return res.json(fail('手机号已存在', 0));
   }
 
   const nickUser = await UserService.getUserByNickname(nickname);
   if (nickUser) {
-    return res.json(Util.fail('昵称已被占用', 0));
+    return res.json(fail('昵称已被占用', 0));
   }
 
-  const passwordEncode = Util.encodePassword(password);
+  const passwordEncode = encodePassword(password);
   const [userId] = await UserService.createUser({
     mobile,
     nickname,
     password: passwordEncode,
-    avatar: `${config.storage?.cdn_domain}/im/app/avatar/${Util.getRandomInt(1, 8)}.jpeg`,
+    avatar: `${config.storage?.cdn_domain}/im/app/avatar/${getRandomInt(1, 8)}.jpeg`,
     gender: GENDER.UNKNOWN,
     create_time: +new Date(),
   });
   if (userId) {
-    return res.json(Util.fail('数据库操作失败', 500));
+    return res.json(fail('数据库操作失败', 500));
   }
-  return res.json(Util.success(userId));
+  return res.json(success(userId));
 });
 
 /**
  * 注销登录
  */
 router.put('/logout', async (req, res) => {
-  const token = Util.getToken(req);
+  const token = getToken(req);
   const { user } = req as any;
   const { uid } = user || {};
 
   await UserService.updateUserToken(uid, { token: '', platform: PLATFORM.UNKNOWN });
   const data = await redis.set(`easy_im_revoked_token_${token}`, 1, 'EX', 3600 * 24 * 90);
-  return res.json(Util.success(!!data));
+  return res.json(success(!!data));
 });
 
 /**
@@ -148,14 +148,14 @@ router.post('/search', async (req, res) => {
   let { mobile } = req.body;
   mobile = `${mobile}`.trim();
 
-  if (!mobile || mobile.length !== 11 || !Util.isPhoneNumber(mobile)) {
-    return res.json(Util.success(null));
+  if (!mobile || mobile.length !== 11 || !isPhoneNumber(mobile)) {
+    return res.json(success(null));
   }
 
   mobile = +mobile;
   const friend = await UserService.getUserInfoByMobile(mobile);
   if (!friend) {
-    return res.json(Util.success(null));
+    return res.json(success(null));
   }
 
   const info = await RelationService.getUserFriend(uid, friend.id);
@@ -175,7 +175,7 @@ router.post('/search', async (req, res) => {
   }
 
   return res.json(
-    Util.success({
+    success({
       ...friend,
       status,
     }),
@@ -193,7 +193,7 @@ router.get('/friendRequest', async (req, res) => {
 
   const list = await RelationRequestService.getRequestList(uid);
 
-  return res.json(Util.success(list));
+  return res.json(success(list));
 });
 
 /**
@@ -210,22 +210,22 @@ router.post('/requestToBeFriend', async (req, res) => {
 
   const friend = await UserService.getUserInfoById(fid);
   if (!friend) {
-    return res.json(Util.fail('用户不存在', 0));
+    return res.json(fail('用户不存在', 0));
   }
 
   const isFriend = await RelationService.getUserFriend(uid, friend.id);
   if (isFriend) {
-    return res.json(Util.fail('已经是好友关系', 0));
+    return res.json(fail('已经是好友关系', 0));
   }
 
   const relation = await RelationRequestService.getPendingRequest(uid, friend.id);
   if (relation) {
-    return res.json(Util.fail('已发送过好友请求', 0));
+    return res.json(fail('已发送过好友请求', 0));
   }
 
   const data = await RelationRequestService.createRequest({ uid, dist_id: friend.id, remark, message });
 
-  return res.json(Util.success(data));
+  return res.json(success(data));
 });
 
 /**
@@ -242,13 +242,13 @@ router.post('/dealFriendRequest', async (req, res) => {
 
   const record = await RelationRequestService.getRequestById(id);
   if (!record) {
-    return res.json(Util.fail('请求不存在', 0));
+    return res.json(fail('请求不存在', 0));
   }
   if (record.status !== 0) {
-    return res.json(Util.fail('该请求已被处理', 0));
+    return res.json(fail('该请求已被处理', 0));
   }
   if (record.dist_id !== uid) {
-    return res.json(Util.fail('越权处理', 0));
+    return res.json(fail('越权处理', 0));
   }
 
   if (agree) {
@@ -256,7 +256,7 @@ router.post('/dealFriendRequest', async (req, res) => {
   }
   const status = agree ? 1 : 2;
   await RelationRequestService.updateRequest(id, status);
-  return res.json(Util.success({ id, status }));
+  return res.json(success({ id, status }));
 });
 
 /**
@@ -309,7 +309,7 @@ router.get('/friends', async (req, res) => {
       list: others,
     });
   }
-  return res.json(Util.success(final));
+  return res.json(success(final));
 });
 
 /**
@@ -322,7 +322,7 @@ router.get('/groups', async (req, res) => {
   const { user } = req as any;
   const { uid } = user || {};
   const list = await UserService.getUserGroup(uid);
-  return res.json(Util.success(list));
+  return res.json(success(list));
 });
 
 /**
@@ -348,7 +348,7 @@ router.get('/unreadMessage', async (req, res) => {
   if (tmp.length) {
     MessageService.updateMultipleMessage(tmp, { is_sent: 1 });
   }
-  return res.json(Util.success(result));
+  return res.json(success(result));
 });
 
 export default router;

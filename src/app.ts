@@ -9,10 +9,10 @@ import config from './config';
 import IndexRouter from './routes';
 import UserRouter from './routes/user';
 import MessageRouter from './routes/message';
-import Util from './helper/util';
 import SocketAuth from './socket/auth';
 import Chat from './socket/chat';
 import redis from './helper/redis';
+import { fail, getToken, success } from './helper/util';
 
 const isDev = process.env.NODE_ENV === 'development';
 const { jwt: jwtConfig } = config;
@@ -37,9 +37,9 @@ app.use(
   expressJwt({
     secret: jwtConfig.secret,
     algorithms: ['HS256'],
-    getToken: Util.getToken,
+    getToken,
     async isRevoked(req, _, done) {
-      const token = Util.getToken(req);
+      const token = getToken(req);
       const exist = await redis.get(`easy_im_revoked_token_${token}`);
       return done(null, !!exist);
     },
@@ -55,18 +55,18 @@ app.use('/api/message', MessageRouter);
 // catch 404 and forward to error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((req, res, next) => {
-  res.json(Util.fail('not found', 404));
+  res.json(fail('not found', 404));
 });
 
 // 500 error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: any, _: Request, res: Response, _next: NextFunction) => {
   if (err.name === 'UnauthorizedError') {
-    return res.json(Util.fail('invalid token', 401));
+    return res.json(fail('invalid token', 401));
   }
 
   return res.json(
-    Util.success(
+    success(
       {
         message: err.message,
         error: isDev ? err : {},

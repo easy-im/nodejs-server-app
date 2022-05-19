@@ -36,11 +36,12 @@ module.exports = {
     ],
     'class-methods-use-this': 'off',
     'no-console': 'off',
-    'max-len': ['error', { code: 150 }],
+    'max-len': ['error', {code: 150}],
     'no-mixed-operators': 'off',
     camelcase: 'off',
     'consistent-return': 'off',
     'object-curly-newline': 'off',
     '@typescript-eslint/ban-ts-comment': 'off',
+    'implicit-arrow-linebreak': 'off',
   },
 };

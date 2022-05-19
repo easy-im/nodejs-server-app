@@ -1,5 +1,5 @@
 import express from 'express';
-import Util from '../helper/util';
+import { fail, success } from '../helper/util';
 import MessageService from '../service/message';
 
 const router = express.Router();
@@ -26,14 +26,14 @@ router.put('/status', async (req, res) => {
   });
 
   if (!Object.keys(data).length) {
-    return res.json(Util.fail('参数不合法', 0));
+    return res.json(fail('参数不合法', 0));
   }
 
   const result = await MessageService.updateMultipleMessage(ids, data);
   if (!result) {
-    return res.json(Util.fail('更新错误', 500));
+    return res.json(fail('更新错误', 500));
   }
-  return res.json(Util.success(null));
+  return res.json(success(null));
 });
 
 export default router;

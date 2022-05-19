@@ -1,7 +1,7 @@
 import {
   GENDER,
   MESSAGE_CONTENT_TYPE,
-  MESSAGE_DIST_TYPE,
+  MESSAGE_TYPE,
   PLATFORM,
   RELATION_REQUEST_STATUS,
   RELATION_STATUS,
@@ -38,7 +38,7 @@ export type MessageTb = {
   hash: string;
   user_id: number;
   dist_id: number;
-  dist_type: MESSAGE_DIST_TYPE;
+  dist_type: MESSAGE_TYPE;
   content_type: MESSAGE_CONTENT_TYPE;
   is_received?: YES_NO;
   is_sent?: YES_NO;
